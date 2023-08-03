@@ -23,7 +23,7 @@ app.get('/getroster', async (req, res) => {
 
   const { date, status } = req.query;
   const dateRef = db.collection("attendance").doc(date);
-  const doc = await dataRef.get();
+  const doc = await dateRef.get();
   const students = [];
 
   if (!doc.exists) {
@@ -40,6 +40,43 @@ app.get('/getroster', async (req, res) => {
 
   res.status(200).send(students)
 })
+app.get('/data', (req, res) => {
+    db.collection("attendance")
+      .get()
+      .then(function(querySnapshot) {
+        var data = [];
+        querySnapshot.forEach(function(doc) {
+          data.push([doc.id,doc.data()]);
+          
+        });
+        console.log(data);
+        res.send(data);
+      })
+      .catch(function(error) {
+        console.log('Error getting Firestore data: ', error);
+        res.status(500).send('Error retrieving Firestore data');
+      });
+  });
+  app.get('/getstudent', async (req, res) => {
+    
+    const name = req.query.name
+    var dict = {};
+    const datesRef = db.collection('attendance');
+  const snapshot = await datesRef.orderBy(name).get();
+  if (snapshot.empty) {
+    res.status(200).send("We could not find " + name + " in our database")
+    return;
+  }
+
+snapshot.forEach(doc => {
+  var date = doc.id 
+  const data = doc.data()
+  dict[date] = data[name]["status"]
+});
+  
+res.status(200).send(dict)
+    
+  });
 
 
   app.get('/roster', (req, res) => {
