@@ -7,9 +7,39 @@ const path = require('path');
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
+app.post('/addstudent', async (req, res) => {
+  const {name, date, status} = req.body
+  const peopleRef = db.collection('attendance').doc(date)
+  const res2 = await peopleRef.set({
+      [name]: {
+          "status": status
+      }
+  }, { merge: true })
+  
+  res.status(200).send("added")
+})
 
+app.get('/getroster', async (req, res) => {
 
+  const { date, status } = req.query;
+  const dateRef = db.collection("attendance").doc(date);
+  const doc = await dataRef.get();
+  const students = [];
 
+  if (!doc.exists) {
+      return res.sendStatus(400)
+  }
+
+  const data = doc.data();
+
+  for (let k in data) {
+   if (data[k]["status"] == status) {
+       students.push(k);
+   }
+  }
+
+  res.status(200).send(students)
+})
 
 
   app.get('/roster', (req, res) => {
